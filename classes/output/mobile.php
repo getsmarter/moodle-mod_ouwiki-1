@@ -29,14 +29,13 @@ class mobile {
             '*', MUST_EXIST);
 
         $modinfo = get_fast_modinfo($course);
-        $cm      = $modinfo->get_cm($args->cmid);
+        $cm      = get_coursemodule_from_id('ouwiki', $args->cmid);
         $context = context_module::instance($cm->id);
 
     /// Getting ouwiki for the module - logic from basicpage.php
         $ouwiki = false;
         try {
             $ouwiki = $DB->get_record('ouwiki', array('id' => $cm->instance));
-            // $ouwiki = $DB->get_record('ouwiki', array('id' => 2));
         } catch (Exception $e) {
             // @TODO See how to redirect or throw friendly errors in app (popups)
             print_r('Handle moodle app errors here');
@@ -48,12 +47,14 @@ class mobile {
          * See how to redirect or throw friendly errors in app (popups) when below fails
          * Check for group id
          */
-        $groupid = 0;
-        if (empty($ouwiki_nologin)) {
-            // Make sure they're logged in and check they have permission to view
-            require_course_login($course, true, $cm);
-            require_capability('mod/ouwiki:view', $context);
-        }
+        /* Below some example code for checks
+            $groupid = 0;
+            if (empty($ouwiki_nologin)) {
+            Make sure they're logged in and check they have permission to view
+                require_course_login($course, true, $cm);
+                require_capability('mod/ouwiki:view', $context);
+            }
+        */
 
     /// Get subwiki, creating it if necessary
         $subwiki = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, $groupid, $args->userid, true);

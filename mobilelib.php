@@ -88,16 +88,20 @@ function get_recentchanges_section($title, $gewgaws, $pageversion, $cm, $output=
 /**
  * Returns array of cleaned wikisections
  *
- * @param array $knownsections
- * @param string $pageversionhtml
+ * @param array $knownsections ouwiki sections
+ * @param string $pageversionhtml ouwiki html
+ * @param int $ouwikiid ouwiki id
+ * @param int $courseid course id
  * @return array
  */
-function get_wiki_sections($knownsections, $pageversionhtml) {
+function get_wiki_sections($knownsections, $pageversionhtml, $ouwikiid, $courseid) {
     $wikisections = [];
     if ($knownsections) {
         foreach ($knownsections as $key => $knownsection) {
             $section = ouwiki_get_section_details($pageversionhtml, $key);
             $section->id = $key;
+            $section->ouwikiid = $ouwikiid;
+            $section->courseid = $courseid;
             $section->content = strip_single_tag($section->content, 'a');
             $wikisections[] = $section; 
         }

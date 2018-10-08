@@ -32,7 +32,16 @@
 
         <ion-card *ngFor="let wikisection of CONTENT_OTHERDATA.wikisections">
             <ion-card-content [innerHTML]=wikisection.content></ion-card-content>
-            <button ion-button clear small core-site-plugins-new-content component="mod_ouwiki" method="mobile_edit_section" [args]="{sectioncontent: wikisection.content}">
+            <button 
+                ion-button clear small title="Edit wiki section" core-site-plugins-new-content 
+                component="mod_ouwiki" 
+                method="mobile_edit_section" 
+                [args]="{
+                    sectioncontent: wikisection.content, 
+                    sectionid: wikisection.id, 
+                    ouwikiid: wikisection.ouwikiid,
+                    courseid: wikisection.courseid,
+                    cmid: <% cmid %>}">
                 {{ 'plugin.mod_ouwiki.editsection' | translate }}
             </button>
         </ion-card>

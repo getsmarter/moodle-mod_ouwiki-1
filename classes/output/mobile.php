@@ -114,12 +114,13 @@ class mobile {
 
         if ($knownsections) {
             $knownsectionscount = count($knownsections);
-            $wikisections = get_wiki_sections($knownsections, $pageversion->xhtml);
+            $wikisections = get_wiki_sections($knownsections, $pageversion->xhtml, $ouwiki->id, $course->id, $cm->id);
         }
 
 
     /// Build data array to output in the template
         $data = array(
+            'cmid' => $cm->id,
             'pagetitle' => $pagetitle,
             'pagelocked' => $locked,
             'knownsectionscount' => $knownsectionscount,
@@ -184,6 +185,73 @@ class mobile {
 
         /// Build data array to output in the template
         $data = array(
+            'cmid'      => $args['cmid'],
+            'sectionid' => $args['sectionid'],
+            'courseid'  => $args['courseid'],
+            'ouwikiid'  => $args['ouwikiid'],
+        );
+
+        return array(
+            'templates' => array(
+                array(
+                    'id' => 'main',
+                    'html' => $OUTPUT->render_from_template('mod_ouwiki/mobile_edit_section_view', $data),
+                ),
+            ),
+            'javascript' => '',
+            'otherdata' => array(
+                'sectioncontent' => $args['sectioncontent'],
+            ),
+            'files' => '',
+        );
+    }
+
+    public static function mobile_section_submit($args) {
+        global $OUTPUT, $USER, $DB, $PAGE, $CFG;
+        
+        $poststatus = 'pending';
+        // Getting related object data to edit/create sections
+        try {
+            $cm             = get_coursemodule_from_instance('ouwiki', $args['ouwikiid']);
+            $course         = $DB->get_record('course', array('id' => $args['courseid']), '*', MUST_EXIST);
+            $context        = context_module::instance($cm->id);
+            $ouwiki         = $DB->get_record('ouwiki', array('id' => $cm->instance));
+            $subwiki        = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, '', $USER->id, true);
+            $pageversion    = ouwiki_get_current_page($subwiki, $pagename);
+            $contentbefore  = $pageversion->xhtml;
+
+        } catch (Exception $e) {
+            // @TODO improve error handling
+            print_r('Missing arguments in form data');
+            $poststatus = 'failed';
+        }
+
+
+        // Check if editing a section
+        if ($args && isset($args['sectionid'])) {
+            $sectiondetails = ouwiki_get_section_details($contentbefore, $args['sectionid']);
+            $newcontent     = $args['sectionbody'];
+
+            try {
+                ouwiki_save_new_version_section($course, $cm, $ouwiki, $subwiki, $pagename, $contentbefore, $newcontent, $sectiondetails);
+                $poststatus = 'success';
+            } catch (Exception $e) {
+                print_r('Could not save ouwiki section');
+                $poststatus = 'failed';
+            }
+        }
+        // else create new section here
+            // ouwiki_get_section_details() to get start end position in text
+            // ouwiki_save_new_version_section() save new section
+
+
+        /// Build data array to output in the template
+        $data = array(
+            'cmid'      => $args['cmid'],
+            'sectionid' => $args['sectionid'],
+            'courseid'  => $args['courseid'],
+            'ouwikiid'  => $args['ouwikiid'],
+            'poststatus' => $poststatus,
         );
 
         return array(

@@ -1,5 +1,5 @@
 {{=<% %>=}}
-<div>
+<core-format-text component="mod_ouwiki" componentId="<% cmid %>">
     <ion-card>
 <!-- Header card -->
         <ion-card>
@@ -10,7 +10,13 @@
             </ion-card-content>
             <!-- Conditional edit/create button -->
             <%#pagetitle%>
-                <button ion-button clear small core-site-plugins-new-content component="mod_ouwiki" method="mobile_edit_wikipage" [args]="{fullpagecontent: CONTENT_OTHERDATA.fullpagecontent}">{{ 'plugin.mod_ouwiki.editpage' | translate }}</button>
+                <button ion-button clear small core-site-plugins-new-content 
+                    title="Edit wiki page content" 
+                    component="mod_ouwiki" 
+                    method="mobile_edit_wikipage" 
+                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent}">
+                    {{ 'plugin.mod_ouwiki.editpage' | translate }}
+                </button>
             <%/pagetitle%>
 
             <%^pagetitle%>
@@ -26,7 +32,7 @@
 <!-- Wicki section cards -->
     <%#knownsectionscount%>
         <ion-card-header>
-                <h2 style="padding-left:0.9rem;">{{ 'plugin.mod_ouwiki.wikisections' | translate}}</h2>
+                <h4 style="padding-left:0.9rem;">{{ 'plugin.mod_ouwiki.wikisections' | translate}}</h4>
                 <hr>
         </ion-card-header>
 
@@ -47,4 +53,4 @@
         </ion-card>
     <%/knownsectionscount%>
     </ion-card>
-</div>
+</core-format-text>

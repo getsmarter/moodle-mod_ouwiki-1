@@ -23,11 +23,8 @@ class mobile {
     public static function all_wikis_view($args) {
         global $OUTPUT, $USER, $DB, $PAGE, $CFG, $ouwiki_nologin;
 
-        $args   = (object) $args;
-        $course = $DB->get_record_select('course',
-            'id = (SELECT course FROM {course_modules} WHERE id = ?)', array($args->courseid),
-            '*', MUST_EXIST);
-
+        $args    = (object) $args;
+        $course  = $DB->get_record('course', array('id' => $args->courseid), '*', MUST_EXIST);
         $modinfo = get_fast_modinfo($course);
         $cm      = get_coursemodule_from_id('ouwiki', $args->cmid);
         $context = context_module::instance($cm->id);
@@ -75,15 +72,14 @@ class mobile {
         }
 
     /// Setting up ouwiki variables - own logic composition from locallib.php and mobilelib.php
-        $ouwikioutput = $PAGE->get_renderer('mod_ouwiki');
-        $pagename == '';
-        $pageversion = ouwiki_get_current_page($subwiki, $pagename);
-        $locked = ($pageversion) ? $pageversion->locked : false;
+        $ouwikioutput    = $PAGE->get_renderer('mod_ouwiki');
+        $pagename        = (!empty($args->pagename) && $args->pagename !== '') ? $args->pagename : '';
+        $pageversion     = ouwiki_get_current_page($subwiki, $pagename);
+        $locked          = ($pageversion) ? $pageversion->locked : false;
         $hideannotations = get_user_preferences(OUWIKI_PREF_HIDEANNOTATIONS, 0);
-        $modcontext = context_module::instance($cm->id);
-        $pagetitle = $pageversion->title === '' ? get_string('startpage', 'ouwiki') :
-                htmlspecialchars($pageversion->title);
-        $nowikipage = false;
+        $modcontext      = context_module::instance($cm->id);
+        $pagetitle       = $pageversion->title === '' ? get_string('startpage', 'ouwiki') : htmlspecialchars($pageversion->title);
+        $nowikipage      = false;
 
         // Must rewrite plugin urls AFTER doing annotations because they depend on byte position.
         $pageversion->xhtml = file_rewrite_pluginfile_urls($pageversion->xhtml, 'pluginfile.php',
@@ -150,12 +146,18 @@ class mobile {
      * Returns the edit wikipage view for a given wiki.
      * @param  array $args Arguments from tool_mobile_get_content WS
      * @return array HTML, javascript and otherdata
-     * @TODO finish below function
+     * @TODO pass page name and if no page name then 'start page' for linked pages
      */
     public static function mobile_edit_wikipage($args) {
         global $OUTPUT, $USER, $DB, $PAGE, $CFG;
-        /// Build data array to output in the template
+
+        $args = (object) $args;
+        $cm = get_coursemodule_from_id('ouwiki', $args->cmid);
+
+        // Build data array to output in the template
         $data = array(
+            'cmid'     => $args->cmid,
+            'pagename' => (!empty($args->pagename) && $args->pagename !== '') ? $args->pagename : '',
         );
 
         return array(
@@ -167,7 +169,58 @@ class mobile {
             ),
             'javascript' => '',
             'otherdata' => array(
-                'fullpagecontent' => $args['fullpagecontent'],
+                'fullpagecontent' => $args->fullpagecontent,
+            ),
+            'files' => '',
+        );
+    }
+
+
+    /**
+     * Handles edit/add wiki pages
+     * @param  array $args Arguments from tool_mobile_get_content WS
+     * @return array HTML, javascript and otherdata
+     * @TODO finish below function - adding pages
+     */
+    public static function mobile_wikipage_submit($args) {
+        global $OUTPUT, $USER, $DB, $PAGE, $CFG;
+        $poststatus = 'pending';
+
+        try {
+            $args     = (object) $args;
+            $cm       = get_coursemodule_from_id('ouwiki', $args->cmid);
+            $course   = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+            $context = context_module::instance($cm->id);
+            $ouwiki   = $DB->get_record('ouwiki', array('id' => $cm->instance));
+            $subwiki  = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, $groupid, $USER->id, true);
+            $pagename = (!empty($args->pagename) && $args->pagename !== '') ? $args->pagename : '';
+            $content  = ouwiki_format_xhtml_a_bit($args->pagebody); // Tidy up HTML
+
+            $newversion = ouwiki_save_new_version($course, $cm, $ouwiki, $subwiki, $pagename, $content, -1, -1, -1, null, null);
+
+            if ($newversion) {
+                $poststatus = 'success';
+            }
+        } catch(Exception $e) {
+            $poststatus = 'failed';
+        }
+
+        // Build data array to output in the template
+        $data = array(
+            'cmid' => $args->cmid,
+            'poststatus' => $poststatus,
+        );
+
+        return array(
+            'templates' => array(
+                array(
+                    'id'   => 'main',
+                    'html' => $OUTPUT->render_from_template('mod_ouwiki/mobile_edit_wikipage_view', $data),
+                ),
+            ),
+            'javascript' => '',
+            'otherdata'  => array(
+                'fullpagecontent' => $args->fullpagecontent,
             ),
             'files' => '',
         );
@@ -183,7 +236,7 @@ class mobile {
     public static function mobile_edit_section($args) {
         global $OUTPUT, $USER, $DB, $PAGE, $CFG;
 
-        /// Build data array to output in the template
+        // Build data array to output in the template
         $data = array(
             'cmid'      => $args['cmid'],
             'sectionid' => $args['sectionid'],
@@ -206,9 +259,15 @@ class mobile {
         );
     }
 
+    /**
+     * Handles edit/add wiki sections
+     * @param  array $args Arguments from tool_mobile_get_content WS
+     * @return array HTML, javascript and otherdata
+     * @TODO finish below function to add section
+     */
     public static function mobile_section_submit($args) {
         global $OUTPUT, $USER, $DB, $PAGE, $CFG;
-        
+
         $poststatus = 'pending';
         // Getting related object data to edit/create sections
         try {
@@ -225,7 +284,6 @@ class mobile {
             print_r('Missing arguments in form data');
             $poststatus = 'failed';
         }
-
 
         // Check if editing a section
         if ($args && isset($args['sectionid'])) {
@@ -244,8 +302,7 @@ class mobile {
             // ouwiki_get_section_details() to get start end position in text
             // ouwiki_save_new_version_section() save new section
 
-
-        /// Build data array to output in the template
+        // Build data array to output in the template
         $data = array(
             'cmid'      => $args['cmid'],
             'sectionid' => $args['sectionid'],

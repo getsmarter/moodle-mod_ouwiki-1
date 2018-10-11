@@ -5,6 +5,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/mod/ouwiki/mobilelib.php');
 
 use context_module;
+use html_writer;
 /**
  * The mod_ouwiki mobile app compatibility.
  *
@@ -120,6 +121,9 @@ class mobile {
             'pagetitle' => $pagetitle,
             'pagelocked' => $locked,
             'knownsectionscount' => $knownsectionscount,
+            'ouwikiid' => $ouwiki->id,
+            'courseid' => $course->id,
+            'pagename' => $pagename,
         );
 
         return array(
@@ -136,6 +140,7 @@ class mobile {
                 'headercontent' => $headercontent,
                 'recentchangescontent' => $recentchangescontent,
                 'wikisections' => json_encode($wikisections),
+                'newwikisectionheading' => '',
             ),
             'files' => '',
         );
@@ -236,6 +241,15 @@ class mobile {
     public static function mobile_edit_section($args) {
         global $OUTPUT, $USER, $DB, $PAGE, $CFG;
 
+        // Check for incoming new section and create template body for edit
+        if ($args['newwikisectionheading']) {
+            $new = new \StdClass;
+            $new->name = ouwiki_display_user($USER, $course->id);
+            $new->date = userdate(time());
+            $args['sectioncontent'] = html_writer::tag('h3', s($args['newwikisectionheading'])) .
+                    html_writer::tag('p', '(' . get_string('createdbyon', 'ouwiki', $new) . ')');
+        }
+
         // Build data array to output in the template
         $data = array(
             'cmid'      => $args['cmid'],
@@ -276,6 +290,7 @@ class mobile {
             $context        = context_module::instance($cm->id);
             $ouwiki         = $DB->get_record('ouwiki', array('id' => $cm->instance));
             $subwiki        = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, '', $USER->id, true);
+            $pagename       = (!empty($args->pagename) && $args->pagename !== '') ? $args['pagename'] : '';
             $pageversion    = ouwiki_get_current_page($subwiki, $pagename);
             $contentbefore  = $pageversion->xhtml;
 
@@ -286,7 +301,7 @@ class mobile {
         }
 
         // Check if editing a section
-        if ($args && isset($args['sectionid'])) {
+        if ($args && strlen($args['sectionid'])) {
             $sectiondetails = ouwiki_get_section_details($contentbefore, $args['sectionid']);
             $newcontent     = $args['sectionbody'];
 
@@ -297,10 +312,19 @@ class mobile {
                 print_r('Could not save ouwiki section');
                 $poststatus = 'failed';
             }
+        } else {
+            // Create new wikisection
+            if ($args['sectionbody'] && !strlen($args['sectionid'])) {
+                try {
+                    $sectiondetails = ouwiki_get_new_section_details($contentbefore, $args['sectionbody']);
+                    ouwiki_save_new_version_section($course, $cm, $ouwiki, $subwiki, $pagename, $contentbefore, $args['sectionbody'], $sectiondetails);
+                    $poststatus = 'success';
+                } catch (Exception $e) {
+                    print_r('Could not save new ouwiki section');
+                    $poststatus = 'failed';
+                }
+            }
         }
-        // else create new section here
-            // ouwiki_get_section_details() to get start end position in text
-            // ouwiki_save_new_version_section() save new section
 
         // Build data array to output in the template
         $data = array(

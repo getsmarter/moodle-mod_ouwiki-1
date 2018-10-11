@@ -27,6 +27,43 @@
                 <button ion-button clear small>{{ 'plugin.mod_ouwiki.createpage' | translate}}</button>
             <%/pagetitle%>
             <!-- End Conditional edit/create button -->
+
+
+            <!-- New wiki section button and input --> 
+            <button ion-button clear small style="float: right"
+                *ngIf="!CONTENT_OTHERDATA.showwikisectionform"
+                (click)="CONTENT_OTHERDATA.showwikisectionform = true">
+                Add section
+            </button>
+
+            <button ion-button clear core-site-plugins-new-content  small style="float: right"
+                component="mod_ouwiki" 
+                method="mobile_edit_section" 
+                form="newwikisection"
+                *ngIf="CONTENT_OTHERDATA.showwikisectionform"
+                [disabled]="CONTENT_OTHERDATA.newwikisectionheading.length <= 3">
+                Submit section
+            </button>
+
+            <form #f="ngForm" id="newwikisection">
+                <ion-card id="newwikisection" *ngIf="CONTENT_OTHERDATA.showwikisectionform">
+                    <ion-card-content>
+                        <ion-input 
+                            name="newwikisectionheading" 
+                            type="text" 
+                            placeholder="Enter new section" 
+                            [(ngModel)]="CONTENT_OTHERDATA.newwikisectionheading">
+                        </ion-input>
+
+                        <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+                        <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
+                        <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
+                        <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                    </ion-card-content>
+                </ion-card>
+            </form>
+            <!-- End New wiki section button and input -->
+
         </ion-card>
 
 <!-- Wicki section cards -->

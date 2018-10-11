@@ -99,10 +99,13 @@ class mobile {
     /// Rendering HTML parts to be output on the mobile template
         // Get header html
         $headercontent  = '';
-        $headercontent .= get_topheading_section($pagetitle, true, $pageversion, $annotations, $files, $cm, $subwiki);
+        $headercontent .= get_topheading_section($pagetitle);
         // Get recent edits html
         $recentchangescontent  = '';
         $recentchangescontent .= strip_single_tag(get_recentchanges_section($pagetitle, true, $pageversion, $cm), 'a');
+        // Get page description html
+        $pagedescription  = '';
+        $pagedescription .= strip_single_tag(get_page_description($pageversion->xhtml), 'a');
         // Get wiki sections html
         $knownsections = false;
         $knownsectionscount = 0;
@@ -139,8 +142,10 @@ class mobile {
                 'fullpagecontent' => $pageversion->xhtml,
                 'headercontent' => $headercontent,
                 'recentchangescontent' => $recentchangescontent,
+                'pagedescription' => $pagedescription,
                 'wikisections' => json_encode($wikisections),
                 'newwikisectionheading' => '',
+                'nowikipages' => true ? !strlen($pagetitle) : false,
             ),
             'files' => '',
         );
@@ -174,7 +179,7 @@ class mobile {
             ),
             'javascript' => '',
             'otherdata' => array(
-                'fullpagecontent' => $args->fullpagecontent,
+                'fullpagecontent' => $args->fullpagecontent ? $args->fullpagecontent : '<p></p>',
             ),
             'files' => '',
         );

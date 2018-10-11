@@ -7,7 +7,10 @@
             <ion-card-content>
                 <div [innerHTML]=CONTENT_OTHERDATA.ouwiki.intro></div>
                 <div [innerHTML]=CONTENT_OTHERDATA.recentchangescontent ng-if=(CONTENT_OTHERDATA.recentchangescontent).length></div>
+                <hr>
+                <div [innerHTML]=CONTENT_OTHERDATA.pagedescription ng-if=(CONTENT_OTHERDATA.pagedescription).length></div>
             </ion-card-content>
+
             <!-- Conditional edit/create button -->
             <%#pagetitle%>
                 <button ion-button clear small core-site-plugins-new-content 
@@ -24,14 +27,26 @@
                     <p>This wiki's start page has not yet been created.</p>
                     <p>Would you like to create it?</p>
                 </div>
-                <button ion-button clear small>{{ 'plugin.mod_ouwiki.createpage' | translate}}</button>
+
+                <button ion-button clear core-site-plugins-new-content small
+                    component="mod_ouwiki" 
+                    method="mobile_edit_wikipage" 
+                    form="newwikipage"
+                    title="Create new page">
+                    {{ 'plugin.mod_ouwiki.createpage' | translate}}
+                </button>
+
+                <form #f="ngForm" id="newwikipage">
+                    <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+                    <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                </form>
             <%/pagetitle%>
             <!-- End Conditional edit/create button -->
 
 
             <!-- New wiki section button and input --> 
             <button ion-button clear small style="float: right"
-                *ngIf="!CONTENT_OTHERDATA.showwikisectionform"
+                *ngIf="!CONTENT_OTHERDATA.showwikisectionform && !CONTENT_OTHERDATA.nowikipages"
                 (click)="CONTENT_OTHERDATA.showwikisectionform = true">
                 Add section
             </button>

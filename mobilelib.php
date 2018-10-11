@@ -29,7 +29,7 @@ use mod_ouwiki_renderer;
  * @param array $output
  * @return string
  */
-function get_topheading_section($title, $gewgaws, $pageversion, $annotations, $files, $cm, $subwiki, $output='') {
+function get_topheading_section($title) {
     $output .= html_writer::start_tag('div', array('class' => 'ouw_heading'));
     $output .= html_writer::tag('h2', format_string($title),
             array('class' => 'ouw_topheading'));
@@ -38,6 +38,20 @@ function get_topheading_section($title, $gewgaws, $pageversion, $annotations, $f
     return $output;
 }
 
+/**
+ * Returns page description if found.
+ * @param string $html
+ * @return string
+ */
+function get_page_description($html) {
+    $description = '';
+
+    if(preg_match('/class="ouwiki_content">(.*?)<h3/', $html, $matches)) {
+        $description = $matches[1];
+    }
+
+    return $description;
+}
 
 /**
  * Returns html for a replaceable recent changes section.

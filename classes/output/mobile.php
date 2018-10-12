@@ -54,6 +54,21 @@ class mobile {
             }
         */
 
+    /// Handling basic no group visible for now
+        // Groupid refers to grouping id, db refers to this as groupid - do not confuse with groupmode
+        $groupid = null;
+        $groupsections = false;
+        $showgroupsections = false;
+        $groupselection = false;
+
+        if ((int) $cm->groupmode > 0) {
+            $groupsections     = groups_get_all_groups($cm->course, 0, $cm->groupingid);
+            $groupsections     = array_values($groupsections);
+            $showgroupsections = true;
+            $groupid           = !$args->groupid ? 1 : $args->groupid;
+            $groupselection    = $groupid;
+        }
+
     /// Get subwiki, creating it if necessary
         $subwiki = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, $groupid, $args->userid, true);
 
@@ -120,13 +135,15 @@ class mobile {
 
     /// Build data array to output in the template
         $data = array(
-            'cmid' => $cm->id,
-            'pagetitle' => $pagetitle,
-            'pagelocked' => $locked,
+            'cmid'               => $cm->id,
+            'pagetitle'          => $pagetitle,
+            'pagelocked'         => $locked,
+            'ouwikiid'           => $ouwiki->id,
+            'courseid'           => $course->id,
+            'pagename'           => $pagename,
+            'showgroupsections'  => $showgroupsections,
+            'groupid'            => $groupid,
             'knownsectionscount' => $knownsectionscount,
-            'ouwikiid' => $ouwiki->id,
-            'courseid' => $course->id,
-            'pagename' => $pagename,
         );
 
         return array(
@@ -138,14 +155,16 @@ class mobile {
             ),
             'javascript' => '',
             'otherdata' => array(
-                'ouwiki' => json_encode($ouwiki),
-                'fullpagecontent' => $pageversion->xhtml,
-                'headercontent' => $headercontent,
-                'recentchangescontent' => $recentchangescontent,
-                'pagedescription' => $pagedescription,
-                'wikisections' => json_encode($wikisections),
+                'ouwiki'                => json_encode($ouwiki),
+                'fullpagecontent'       => $pageversion->xhtml,
+                'headercontent'         => $headercontent,
+                'recentchangescontent'  => $recentchangescontent,
+                'pagedescription'       => $pagedescription,
+                'wikisections'          => json_encode($wikisections),
                 'newwikisectionheading' => '',
-                'nowikipages' => true ? !strlen($pagetitle) : false,
+                'nowikipages'           => true ? !strlen($pagetitle) : false,
+                'groupsections'         => json_encode($groupsections),
+                'groupselection'        => $groupselection,
             ),
             'files' => '',
         );
@@ -168,6 +187,7 @@ class mobile {
         $data = array(
             'cmid'     => $args->cmid,
             'pagename' => (!empty($args->pagename) && $args->pagename !== '') ? $args->pagename : '',
+            'groupid'  => $args->groupid,
         );
 
         return array(
@@ -200,8 +220,9 @@ class mobile {
             $args     = (object) $args;
             $cm       = get_coursemodule_from_id('ouwiki', $args->cmid);
             $course   = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-            $context = context_module::instance($cm->id);
+            $context  = context_module::instance($cm->id);
             $ouwiki   = $DB->get_record('ouwiki', array('id' => $cm->instance));
+            $groupid  = (int) $args->groupid ? $args->groupid : null;
             $subwiki  = ouwiki_get_subwiki($course, $ouwiki, $cm, $context, $groupid, $USER->id, true);
             $pagename = (!empty($args->pagename) && $args->pagename !== '') ? $args->pagename : '';
             $content  = ouwiki_format_xhtml_a_bit($args->pagebody); // Tidy up HTML
@@ -217,8 +238,9 @@ class mobile {
 
         // Build data array to output in the template
         $data = array(
-            'cmid' => $args->cmid,
+            'cmid'       => $args->cmid,
             'poststatus' => $poststatus,
+            'groupid'    => $args->groupid,
         );
 
         return array(
@@ -248,7 +270,7 @@ class mobile {
 
         // Check for incoming new section and create template body for edit
         if ($args['newwikisectionheading']) {
-            $new = new \StdClass;
+            $new       = new \StdClass;
             $new->name = ouwiki_display_user($USER, $course->id);
             $new->date = userdate(time());
             $args['sectioncontent'] = html_writer::tag('h3', s($args['newwikisectionheading'])) .
@@ -261,6 +283,7 @@ class mobile {
             'sectionid' => $args['sectionid'],
             'courseid'  => $args['courseid'],
             'ouwikiid'  => $args['ouwikiid'],
+            'groupid'   => $args['groupid'],
         );
 
         return array(
@@ -333,10 +356,10 @@ class mobile {
 
         // Build data array to output in the template
         $data = array(
-            'cmid'      => $args['cmid'],
-            'sectionid' => $args['sectionid'],
-            'courseid'  => $args['courseid'],
-            'ouwikiid'  => $args['ouwikiid'],
+            'cmid'       => $args['cmid'],
+            'sectionid'  => $args['sectionid'],
+            'courseid'   => $args['courseid'],
+            'ouwikiid'   => $args['ouwikiid'],
             'poststatus' => $poststatus,
         );
 

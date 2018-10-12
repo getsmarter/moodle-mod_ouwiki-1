@@ -1,6 +1,28 @@
 {{=<% %>=}}
 <core-format-text component="mod_ouwiki" componentId="<% cmid %>">
     <ion-card>
+<!-- Group sections -->
+    <%#showgroupsections%>
+        <ion-item>
+            <ion-label>Visible groups</ion-label>
+            <ion-select [(ngModel)]="CONTENT_OTHERDATA.groupselection">
+                <ion-option value="{{group.id}}" *ngFor="let group of CONTENT_OTHERDATA.groupsections">{{group.name}}</ion-option>
+            </ion-select>
+        </ion-item>
+
+        <button ion-button clear small core-site-plugins-new-content
+            *ngIf="CONTENT_OTHERDATA.groupselection"
+            component="mod_ouwiki" 
+            method="all_wikis_view"
+            [args]="{cmid:<% cmid %>, courseid:<% courseid %>, pagename:'<% pagename %>' ,'groupid':CONTENT_OTHERDATA.groupselection}"
+            samePage=true
+            refreshOnSuccess=true
+            >
+            Show selected group wikipage
+        </button>
+    <%/showgroupsections%>
+<!-- End Group sections -->
+
 <!-- Header card -->
         <ion-card>
             <ion-card-header [innerHTML]=CONTENT_OTHERDATA.headercontent></ion-card-header>
@@ -17,7 +39,7 @@
                     title="Edit wiki page content" 
                     component="mod_ouwiki" 
                     method="mobile_edit_wikipage" 
-                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent}">
+                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent, groupid:CONTENT_OTHERDATA.groupselection}">
                     {{ 'plugin.mod_ouwiki.editpage' | translate }}
                 </button>
             <%/pagetitle%>
@@ -32,13 +54,15 @@
                     component="mod_ouwiki" 
                     method="mobile_edit_wikipage" 
                     form="newwikipage"
-                    title="Create new page">
+                    title="Create new page"
+                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent, groupid:CONTENT_OTHERDATA.groupselection}">
                     {{ 'plugin.mod_ouwiki.createpage' | translate}}
                 </button>
 
                 <form #f="ngForm" id="newwikipage">
                     <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
                     <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                    <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
                 </form>
             <%/pagetitle%>
             <!-- End Conditional edit/create button -->
@@ -74,6 +98,7 @@
                         <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
                         <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
                         <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                        <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
                     </ion-card-content>
                 </ion-card>
             </form>

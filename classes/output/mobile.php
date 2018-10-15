@@ -321,6 +321,12 @@ class mobile {
             $pagename       = (!empty($args->pagename) && $args->pagename !== '') ? $args['pagename'] : '';
             $pageversion    = ouwiki_get_current_page($subwiki, $pagename);
             $contentbefore  = $pageversion->xhtml;
+            $sectionbody    = $args['sectioncontent'];
+
+            // Check if sectionbody changed and decode html special chars
+            if (isset($args['sectionbody']) && strlen($args['sectionbody']) > 0) {
+                $sectionbody = html_entity_decode($args['sectionbody']);
+            }
 
         } catch (Exception $e) {
             // @TODO improve error handling
@@ -331,7 +337,7 @@ class mobile {
         // Check if editing a section
         if ($args && strlen($args['sectionid'])) {
             $sectiondetails = ouwiki_get_section_details($contentbefore, $args['sectionid']);
-            $newcontent     = $args['sectionbody'];
+            $newcontent     = $sectionbody;
 
             try {
                 ouwiki_save_new_version_section($course, $cm, $ouwiki, $subwiki, $pagename, $contentbefore, $newcontent, $sectiondetails);
@@ -342,10 +348,10 @@ class mobile {
             }
         } else {
             // Create new wikisection
-            if ($args['sectionbody'] && !strlen($args['sectionid'])) {
+            if ($sectionbody && !strlen($args['sectionid'])) {
                 try {
-                    $sectiondetails = ouwiki_get_new_section_details($contentbefore, $args['sectionbody']);
-                    ouwiki_save_new_version_section($course, $cm, $ouwiki, $subwiki, $pagename, $contentbefore, $args['sectionbody'], $sectiondetails);
+                    $sectiondetails = ouwiki_get_new_section_details($contentbefore, $sectionbody);
+                    ouwiki_save_new_version_section($course, $cm, $ouwiki, $subwiki, $pagename, $contentbefore, $sectionbody, $sectiondetails);
                     $poststatus = 'success';
                 } catch (Exception $e) {
                     print_r('Could not save new ouwiki section');
@@ -372,7 +378,7 @@ class mobile {
             ),
             'javascript' => '',
             'otherdata' => array(
-                'sectioncontent' => $args['sectioncontent'],
+                'sectioncontent' => $sectionbody,
             ),
             'files' => '',
         );

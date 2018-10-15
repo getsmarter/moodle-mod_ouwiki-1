@@ -4,28 +4,26 @@
     <%#poststatus%>
         <h6 style="padding-left: 1.2rem;">Successfully changed section</h6>
     <%/poststatus%>
-        
+
+    <!-- Temp fix until core-rich-text-editor has been resolved -->
+    <ion-card>
+        <ion-card-content>
+            <div 
+                contenteditable="true" 
+                [innerHTML]=CONTENT_OTHERDATA.sectioncontent 
+                (keyup)="CONTENT_OTHERDATA.sectionbody = $event.target.innerHTML">
+            </div>
+        </ion-card-content>
+    </ion-card>
+
     <form #f="ngForm" id="edit_section_form">
-        <ion-card>
-            <ion-card-content>
-                <core-rich-text-editor 
-                    style="max-height: 70vh;" item-content 
-                    name="sectionbody" 
-                    component="mod_ouwiki" 
-                    componentId="<% cmid %>" 
-                    ngControl="content" 
-                    [html]=CONTENT_OTHERDATA.sectioncontent 
-                    [(ngModel)]=CONTENT_OTHERDATA.sectioncontent>
-                </core-rich-text-editor>
 
-                <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
-                <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
-                <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
-                <ion-input hidden name="sectionid" type="text" value="<% sectionid %>"></ion-input>
-                <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
-
-            </ion-card-content>
-        </ion-card>
+        <ion-input hidden name="sectionbody" type="text" value={{CONTENT_OTHERDATA.sectionbody}}></ion-input>
+        <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+        <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
+        <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
+        <ion-input hidden name="sectionid" type="text" value="<% sectionid %>"></ion-input>
+        <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
 
         <button 
             ion-button small core-site-plugins-new-content

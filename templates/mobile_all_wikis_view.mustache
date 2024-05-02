@@ -1,16 +1,47 @@
 {{=<% %>=}}
-<div>
+<core-format-text component="mod_ouwiki" componentId="<% cmid %>">
     <ion-card>
+<!-- Group sections -->
+    <%#showgroupsections%>
+        <ion-item>
+            <ion-label>Visible groups</ion-label>
+            <ion-select [(ngModel)]="CONTENT_OTHERDATA.groupselection">
+                <ion-option value="{{group.id}}" *ngFor="let group of CONTENT_OTHERDATA.groupsections">{{group.name}}</ion-option>
+            </ion-select>
+        </ion-item>
+
+        <button ion-button clear small core-site-plugins-new-content
+            *ngIf="CONTENT_OTHERDATA.groupselection"
+            component="mod_ouwiki" 
+            method="all_wikis_view"
+            [args]="{cmid:<% cmid %>, courseid:<% courseid %>, pagename:'<% pagename %>' ,'groupid':CONTENT_OTHERDATA.groupselection}"
+            samePage=true
+            refreshOnSuccess=true
+            >
+            Show selected group wikipage
+        </button>
+    <%/showgroupsections%>
+<!-- End Group sections -->
+
 <!-- Header card -->
         <ion-card>
             <ion-card-header [innerHTML]=CONTENT_OTHERDATA.headercontent></ion-card-header>
             <ion-card-content>
                 <div [innerHTML]=CONTENT_OTHERDATA.ouwiki.intro></div>
                 <div [innerHTML]=CONTENT_OTHERDATA.recentchangescontent ng-if=(CONTENT_OTHERDATA.recentchangescontent).length></div>
+                <hr>
+                <div [innerHTML]=CONTENT_OTHERDATA.pagedescription ng-if=(CONTENT_OTHERDATA.pagedescription).length></div>
             </ion-card-content>
+
             <!-- Conditional edit/create button -->
             <%#pagetitle%>
-                <button ion-button clear small core-site-plugins-new-content component="mod_ouwiki" method="mobile_edit_wikipage" [args]="{fullpagecontent: CONTENT_OTHERDATA.fullpagecontent}">{{ 'plugin.mod_ouwiki.editpage' | translate }}</button>
+                <button ion-button clear small core-site-plugins-new-content 
+                    title="Edit wiki page content" 
+                    component="mod_ouwiki" 
+                    method="mobile_edit_wikipage" 
+                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent, groupid:CONTENT_OTHERDATA.groupselection}">
+                    {{ 'plugin.mod_ouwiki.editpage' | translate }}
+                </button>
             <%/pagetitle%>
 
             <%^pagetitle%>
@@ -18,24 +49,85 @@
                     <p>This wiki's start page has not yet been created.</p>
                     <p>Would you like to create it?</p>
                 </div>
-                <button ion-button clear small>{{ 'plugin.mod_ouwiki.createpage' | translate}}</button>
+
+                <button ion-button clear core-site-plugins-new-content small
+                    component="mod_ouwiki" 
+                    method="mobile_edit_wikipage" 
+                    form="newwikipage"
+                    title="Create new page"
+                    [args]="{cmid: <% cmid %>, fullpagecontent: CONTENT_OTHERDATA.fullpagecontent, groupid:CONTENT_OTHERDATA.groupselection}">
+                    {{ 'plugin.mod_ouwiki.createpage' | translate}}
+                </button>
+
+                <form #f="ngForm" id="newwikipage">
+                    <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+                    <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                    <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
+                </form>
             <%/pagetitle%>
             <!-- End Conditional edit/create button -->
+
+
+            <!-- New wiki section button and input --> 
+            <button ion-button clear small style="float: right"
+                *ngIf="!CONTENT_OTHERDATA.showwikisectionform && !CONTENT_OTHERDATA.nowikipages"
+                (click)="CONTENT_OTHERDATA.showwikisectionform = true">
+                Add section
+            </button>
+
+            <button ion-button clear core-site-plugins-new-content  small style="float: right"
+                component="mod_ouwiki" 
+                method="mobile_edit_section" 
+                form="newwikisection"
+                *ngIf="CONTENT_OTHERDATA.showwikisectionform"
+                [disabled]="CONTENT_OTHERDATA.newwikisectionheading.length <= 3">
+                Submit section
+            </button>
+
+            <form #f="ngForm" id="newwikisection">
+                <ion-card id="newwikisection" *ngIf="CONTENT_OTHERDATA.showwikisectionform">
+                    <ion-card-content>
+                        <ion-input 
+                            name="newwikisectionheading" 
+                            type="text" 
+                            placeholder="Enter new section" 
+                            [(ngModel)]="CONTENT_OTHERDATA.newwikisectionheading">
+                        </ion-input>
+
+                        <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+                        <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
+                        <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
+                        <ion-input hidden name="pagename" type="text" value="<% pagename %>"></ion-input>
+                        <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
+                    </ion-card-content>
+                </ion-card>
+            </form>
+            <!-- End New wiki section button and input -->
+
         </ion-card>
 
 <!-- Wicki section cards -->
     <%#knownsectionscount%>
         <ion-card-header>
-                <h2 style="padding-left:0.9rem;">{{ 'plugin.mod_ouwiki.wikisections' | translate}}</h2>
+                <h4 style="padding-left:0.9rem;">{{ 'plugin.mod_ouwiki.wikisections' | translate}}</h4>
                 <hr>
         </ion-card-header>
 
         <ion-card *ngFor="let wikisection of CONTENT_OTHERDATA.wikisections">
             <ion-card-content [innerHTML]=wikisection.content></ion-card-content>
-            <button ion-button clear small core-site-plugins-new-content component="mod_ouwiki" method="mobile_edit_section" [args]="{sectioncontent: wikisection.content}">
+            <button 
+                ion-button clear small title="Edit wiki section" core-site-plugins-new-content 
+                component="mod_ouwiki" 
+                method="mobile_edit_section" 
+                [args]="{
+                    sectioncontent: wikisection.content, 
+                    sectionid: wikisection.id, 
+                    ouwikiid: wikisection.ouwikiid,
+                    courseid: wikisection.courseid,
+                    cmid: <% cmid %>}">
                 {{ 'plugin.mod_ouwiki.editsection' | translate }}
             </button>
         </ion-card>
     <%/knownsectionscount%>
     </ion-card>
-</div>
+</core-format-text>

@@ -1,8 +1,40 @@
 {{=<% %>=}}
- <!-- @TODO implement wysiwig and posting  -->
-<ion-card>
-    <ion-card-header>To be implemented</ion-card-header>
-    <ion-card-content>
-        <div contenteditable="true" style="min-height: 25vh;" [innerHTML]=CONTENT_OTHERDATA.sectioncontent></div>
-    </ion-card-content>
-</ion-card>
+<core-format-text component="mod_ouwiki" componentId="<% cmid %>">
+
+    <%#poststatus%>
+        <h6 style="padding-left: 1.2rem;">Successfully changed section</h6>
+    <%/poststatus%>
+
+    <!-- Temp fix until core-rich-text-editor has been resolved -->
+    <ion-card>
+        <ion-card-content>
+            <div 
+                contenteditable="true" 
+                [innerHTML]=CONTENT_OTHERDATA.sectioncontent 
+                (keyup)="CONTENT_OTHERDATA.sectionbody = $event.target.innerHTML">
+            </div>
+        </ion-card-content>
+    </ion-card>
+
+    <form #f="ngForm" id="edit_section_form">
+
+        <ion-input hidden name="sectionbody" type="text" value={{CONTENT_OTHERDATA.sectionbody}}></ion-input>
+        <ion-input hidden name="cmid" type="text" value="<% cmid %>"></ion-input>
+        <ion-input hidden name="courseid" type="text" value="<% courseid %>"></ion-input>
+        <ion-input hidden name="ouwikiid" type="text" value="<% ouwikiid %>"></ion-input>
+        <ion-input hidden name="sectionid" type="text" value="<% sectionid %>"></ion-input>
+        <ion-input hidden name="groupid" type="text" value="<% groupid %>"></ion-input>
+
+        <button 
+            ion-button small core-site-plugins-new-content
+            component="mod_ouwiki" 
+            method="mobile_section_submit" 
+            samePage=true
+            refreshOnSuccess=true
+            form="edit_section_form"
+            [useOtherData]="['sectioncontent']">
+            Submit
+        </button>
+    </form>
+
+</core-format-text>
